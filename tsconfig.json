@@ -1,0 +1,32 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": false,
+		"target": "es2017",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"strictNullChecks": false,
+		"allowImportingTsExtensions": null,
+		// "allowArbitraryExtensions": true,
+		"isolatedModules": true,
+		"jsx": "preserve",
+		"jsxImportSource": "svelte",
+		"lib": [
+			"dom",
+			"dom.iterable",
+			"esnext"
+		]
+	},
+	"include": [
+		"src/**/*.d.ts",
+		"src/**/*.ts",
+		"src/**/*.svelte"
+	]
+}
