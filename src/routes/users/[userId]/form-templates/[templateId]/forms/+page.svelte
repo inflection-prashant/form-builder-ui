@@ -34,17 +34,17 @@
 
 	////////////////////////////////////////////////////////////////////////////////////
 
-	export let data: PageServerData;
-	$: sections = data.assessmentTemplate.Sections;
-	$: questions = data.assessmentTemplate.Questions;
-	$: templateInfo = data.assessmentTemplate.Template;
+	let data: PageServerData=$props();
+	let sections = $state(data.assessmentTemplate.Sections);
+	let questions = $state(data.assessmentTemplate.Questions);
+	let templateInfo = $state(data.assessmentTemplate.Template); //data.assessmentTemplate.Template;
 	const parentFormTemplateId = $page.params.assessmentId;
 	let result = findSectionByTitle(data.assessmentTemplate.Sections, 'Assessment Root Section');
 	const rootSectionId: string = result.id;
-	$: showSheet = false;
-	$: responseType = null;
-	$: questionId = null;
-	$: questionCard = null;
+	let showSheet = $state(false); // false;
+	let responseType = $state();
+	let questionId = $state();
+	let questionCard = $state();
 	let typeOfQuestion: 'Basic' | 'Advanced' = 'Basic';
 	let sectionNameCounter = 1;
 	let highlightedSection: number | null = null;
@@ -55,13 +55,13 @@
 	// let deleteButtonClickedSubCard = false;
 	let sectionForm = false;
 	let subSectionForm = false;
-	$: sectionDataFromDatabase = null;
-	$: subSectionDataFromDatabase = null;
-	$: parentSection = null;
+	let sectionDataFromDatabase = $state();
+	let subSectionDataFromDatabase = $state();
+	let parentSection = $state();
 	const userId = $page.params.userId;
-	let uiSections: Section[] = [];
+	let uiSections: Section[] = $state([]);
 
-	$: uiSections = mapSectionsAndQuestions(
+	uiSections = mapSectionsAndQuestions(
 		data.assessmentTemplate.Sections,
 		[],
 		rootSectionId,
@@ -679,6 +679,12 @@
 			}
 		}
 	}
+	// import { state } from '$app/state';
+	// Get all component names from formComponents
+	const componentKeys = Object.keys(formComponents);
+
+	// Initialize selected component (default to first component in the list)
+	let selected = $state(componentKeys[0]);
 </script>
 
 {#if showSheet}
@@ -801,7 +807,7 @@
 										<Button
 											variant="outline"
 											class="h-full w-full p-2"
-											on:click={() => openSectionForm(section.databaseId)}
+											onclick={() => openSectionForm(section.databaseId)}
 										>
 											<div class="flex-col">
 												{section.Title || section.name}
@@ -834,7 +840,7 @@
 													<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 													<AlertDialog.Action
 														class="bg-destructive hover:bg-destructive dark:text-white"
-														on:click={() => handleDeleteSection(section.localId, section.databaseId)}
+														onclick={() => handleDeleteSection(section.localId, section.databaseId)}
 														>Delete</AlertDialog.Action
 													>
 												</AlertDialog.Footer>
@@ -877,6 +883,21 @@
 															id={card.id}
 															{card}
 														/> -->
+														<select bind:value={selected}>
+															{#each componentKeys as key}
+																<option value={key}>{key}</option>
+															{/each}
+														</select>
+
+														{#if selected}
+															{@const SelectedComponent = formComponents[selected]}
+															<SelectedComponent
+																on:openSheet={openSheet}
+																on:closeSheet={closeSheet}
+																on:handleSubmitForm={handleSubmit}
+																responseType={selected}
+															/>
+														{/if}
 													{/if}
 													<button
 														class="delete-button"
@@ -1046,7 +1067,7 @@
 																>
 																	<div class="relative flex w-[95%]">
 																		{#if subcard.name !== 'None'}
-																			<svelte:component
+																			<!-- <svelte:component
 																				this={formComponents[subcard.name]}
 																				on:openSheet={openSheet}
 																				on:closeSheet={closeSheet}
@@ -1054,7 +1075,22 @@
 																				responseType={subcard.name}
 																				id={subcard.id}
 																				card={subcard}
-																			/>
+																			/> -->
+																			<select bind:value={selected}>
+																				{#each componentKeys as key}
+																					<option value={key}>{key}</option>
+																				{/each}
+																			</select>
+
+																			{#if selected}
+																				{@const SelectedComponent = formComponents[selected]}
+																				<SelectedComponent
+																					on:openSheet={openSheet}
+																					on:closeSheet={closeSheet}
+																					on:handleSubmitForm={handleSubmit}
+																					responseType={selected}
+																				/>
+																			{/if}
 																		{:else}
 																			<div class="relative"></div>
 																		{/if}
