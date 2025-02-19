@@ -55,7 +55,6 @@ export function findSectionById(
         }
         if (section.subsections) {
             for (const subsection of section.subsections) {
-                console.log()
                 // Check if the subsection matches the ID and parent ID
                 if (subsection.localId === sectionId) {
                     console.log("Found subsection:", subsection);
