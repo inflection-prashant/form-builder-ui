@@ -41,6 +41,7 @@ export async function getQuestionById(questionId: string) {
 //     }
 // }
 export async function createNewSection(model: { parentFormTemplateId: string, parentSectionId: string }) {
+    console.log(model);
     const response = await fetch(`/api/server/section`, {
         method: 'POST',
         body: JSON.stringify(model),

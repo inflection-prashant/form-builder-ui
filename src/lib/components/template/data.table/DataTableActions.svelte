@@ -19,12 +19,12 @@
 	let link: string = $state();
 	link = createdLink + `/${submissionId}`;
 
-	function addQuestions(assessmentId: string) {
-		goto(`/users/${userId}/assessments/${assessmentId}/question`);
+	function addQuestions(templateId: string) {
+		goto(`/users/${userId}/form-templates/${templateId}/forms`);
 	}
 
-	function reviewAssessment(assessmentId: string) {
-		goto(`/users/${userId}/assessments/${assessmentId}/preview`);
+	function reviewAssessment(templateId: string) {
+		goto(`/users/${userId}/form-templates/${templateId}/preview`);
 	}
 
 	const createLink = async (templateId: string) => {

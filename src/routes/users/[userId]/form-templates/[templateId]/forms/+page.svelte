@@ -34,38 +34,38 @@
 
 	////////////////////////////////////////////////////////////////////////////////////
 
-	let data: PageServerData=$props();
-	let sections = $state(data.assessmentTemplate.Sections);
-	let questions = $state(data.assessmentTemplate.Questions);
-	let templateInfo = $state(data.assessmentTemplate.Template); //data.assessmentTemplate.Template;
-	const parentFormTemplateId = $page.params.assessmentId;
-	let result = findSectionByTitle(data.assessmentTemplate.Sections, 'Assessment Root Section');
+	let data: PageServerData = $props();
+	let sections = $state(data.data.assessmentTemplate.Sections);
+	let questions = $state(data.data.assessmentTemplate.Questions);
+	let templateInfo = $state(data.data.assessmentTemplate.Template); //data.assessmentTemplate.Template;
+	const parentFormTemplateId = $page.params.templateId;
+	let result = findSectionByTitle(data.data.assessmentTemplate.Sections, 'Assessment Root Section');
 	const rootSectionId: string = result.id;
 	let showSheet = $state(false); // false;
 	let responseType = $state();
 	let questionId = $state();
 	let questionCard = $state();
-	let typeOfQuestion: 'Basic' | 'Advanced' = 'Basic';
+	let typeOfQuestion: 'Basic' | 'Advanced' = $state('Basic');
 	let sectionNameCounter = 1;
-	let highlightedSection: number | null = null;
-	let highlightedSubSection: number | null = null;
-	let deleteButtonClicked = false;
-	let deleteSubButtonClicked = false;
+	let highlightedSection: number | null = $state();
+	let highlightedSubSection: number | null = $state();
+	let deleteButtonClicked = $state(false);
+	let deleteSubButtonClicked = $state(false);
 	let cardToDelete: any = null;
 	// let deleteButtonClickedSubCard = false;
-	let sectionForm = false;
-	let subSectionForm = false;
+	let sectionForm = $state(false);
+	let subSectionForm = $state(false);
 	let sectionDataFromDatabase = $state();
 	let subSectionDataFromDatabase = $state();
 	let parentSection = $state();
-	const userId = $page.params.userId;
 	let uiSections: Section[] = $state([]);
+	const userId = $page.params.userId;
 
 	uiSections = mapSectionsAndQuestions(
-		data.assessmentTemplate.Sections,
+		data.data.assessmentTemplate.Sections,
 		[],
 		rootSectionId,
-		data.assessmentTemplate.Questions
+		data.data.assessmentTemplate.Questions
 	);
 
 	function mapSectionsAndQuestions(
@@ -469,6 +469,7 @@
 	}
 
 	async function getSectionData(parentFormTemplateId: string, parentSectionId: string) {
+		console.log(parentFormTemplateId, 'parentFormTemplateId');
 		const sectionData = await createNewSection({ parentFormTemplateId, parentSectionId });
 		console.log(sectionData, 'sectionData');
 		return sectionData;
@@ -732,7 +733,7 @@
 				<Breadcrumb.Root>
 					<Breadcrumb.List class="flex">
 						<Breadcrumb.Item>
-							<Breadcrumb.Link href="/users/{userId}/assessments">Assessment</Breadcrumb.Link>
+							<Breadcrumb.Link href="/users/{userId}/form-templates">Templates</Breadcrumb.Link>
 						</Breadcrumb.Item>
 						<Breadcrumb.Separator />
 						<Breadcrumb.Item>
@@ -772,8 +773,10 @@
 				{/if}
 
 				<div
+					ondragover={(event) => {
+						event.preventDefault(); // ✅ Prevent default behavior here
+					}}
 					class="flex h-full w-full flex-col"
-					on:dragover|preventDefault
 					use:dropzone={{ on_dropzone: handleDragAndDrop }}
 					role="region"
 					aria-label="Drop Area"
@@ -781,9 +784,9 @@
 					{#each uiSections as section (section.localId)}
 						<div
 							class="my-4 border p-3 {highlightedSection === section.localId ? 'highlight' : ''}"
-							on:dragenter={() => handleDragEnter(section.localId)}
-							on:dragleave={() => handleDragLeave(section.localId)}
-							on:dragover={(event) => handleDragOver(section.localId, event)}
+							ondragenter={() => handleDragEnter(section.localId)}
+							ondragleave={() => handleDragLeave(section.localId)}
+							ondragover={(event) => handleDragOver(section.localId, event)}
 							use:dropzone={{
 								on_dropzone: (data, e) => handleDragAndDrop(data, e, section.localId)
 							}}
@@ -865,10 +868,12 @@
 											<div
 												class="hover-container items-center justify-between"
 												draggable="true"
-												on:dragstart={(event) =>
+												ondragstart={(event) =>
 													handleCardDragStart(section.localId, card.localId, event)}
-												on:drop={(event) => handleCardDrop(section.localId, index, event)}
-												on:dragover|preventDefault
+												ondrop={(event) => handleCardDrop(section.localId, index, event)}
+												ondragover={(event) => {
+													event.preventDefault(); // ✅ Prevent default behavior here
+												}}
 												role="listitem"
 												aria-label={`Card: ${card.name}`}
 											>
@@ -901,7 +906,7 @@
 													{/if}
 													<button
 														class="delete-button"
-														on:click={() =>
+														onclick={() =>
 															openDeleteModal({
 																sectionLocalId: section.localId,
 																cardLocalId: card.localId,
@@ -962,9 +967,9 @@
 												class="my-2 h-fit w-full p-1 {highlightedSubSection === subsection.localId
 													? 'highlight'
 													: ''} "
-												on:dragenter={() => handleDragEnterSubsection(subsection.localId)}
-												on:dragleave={() => handleDragLeaveSubsection(subsection.localId)}
-												on:dragover={(event) => handleDragOverSubsection(subsection.localId, event)}
+												ondragenter={() => handleDragEnterSubsection(subsection.localId)}
+												ondragleave={() => handleDragLeaveSubsection(subsection.localId)}
+												ondragover={(event) => handleDragOverSubsection(subsection.localId, event)}
 												use:dropzone={{
 													on_dropzone: (data, e) =>
 														handleDragAndDrop(data, e, section.localId, subsection.localId)
@@ -1057,10 +1062,12 @@
 															{#each subsection.cards as subcard, index (subcard.localId)}
 																<div
 																	class="hover-container my-1 items-center justify-between"
-																	on:dragstart={(event) =>
+																	ondragstart={(event) =>
 																		handleCardDragStart(subsection.localId, subcard.localId, event)}
-																	on:dragover|preventDefault
-																	on:drop={(event) =>
+																	ondragover={(event) => {
+																		event.preventDefault(); // ✅ Prevent default behavior here
+																	}}
+																	ondrop={(event) =>
 																		handleCardDrop(subsection.localId, index, event)}
 																	role="listitem"
 																	aria-label={`Draggable subcard: ${subcard.name}`}
@@ -1097,7 +1104,7 @@
 
 																		<button
 																			class="delete-button"
-																			on:click={() =>
+																			onclick={() =>
 																				openDeleteSubModal({
 																					sectionLocalId: section.localId,
 																					subsectionLocalId: subsection.localId,
@@ -1140,12 +1147,12 @@
 																		<div
 																			class="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
 																		>
-																			<Button variant="outline" on:click={closeDeleteSubModal}
+																			<Button variant="outline" onclick={closeDeleteSubModal}
 																				>Cancel</Button
 																			>
 																			<Button
 																				class="bg-destructive hover:bg-destructive dark:text-white"
-																				on:click={() =>
+																				onclick={() =>
 																					confirmDeleteSubcard(
 																						cardToDelete.sectionLocalId,
 																						cardToDelete.subsectionLocalId,

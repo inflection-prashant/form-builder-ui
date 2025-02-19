@@ -14,9 +14,10 @@ interface ApiResponse {
 }
 
 export const get_ = async (url: string) => {
-    const methodStyled = chalk.bgMagenta.white.bold(`GET`);
+    // const methodStyled = chalk.bgMagenta.white.bold(`GET`);
     try {
-        console.log(chalk.hex('#FFA500')(`${methodStyled} Request URL: ${url}`));
+        // console.log((`GET Request URL: ${url}`));
+        console.log(chalk.hex('#FFA500')(`GET Request URL: ${url}`));
 
         const res = await fetch(url, { method: 'GET', headers });
         const response = await res.json();
@@ -31,10 +32,9 @@ export const get_ = async (url: string) => {
 };
 
 export const post_ = async (url: string, bodyObj: unknown) => {
-    const methodStyled = chalk.bgYellow.white.bold(`POST`);
     try {
-        console.log(chalk.hex('#FFA500')(`${methodStyled} Request URL: ${url}`));
-        console.log(chalk.hex('#FFA504')(`${methodStyled} Request Body: ${JSON.stringify(bodyObj)}`));
+        console.log(chalk.hex('#FFA500')(`POST Request URL: ${url}`));
+        console.log(chalk.hex('#FFA504')(`POST Request Body: ${JSON.stringify(bodyObj)}`));
 
         const res = await fetch(url, {
             method: 'POST',
@@ -53,10 +53,10 @@ export const post_ = async (url: string, bodyObj: unknown) => {
 };
 
 export const put_ = async (url: string, bodyObj: unknown) => {
-    const methodStyled = chalk.bgGreen.white.bold(`PUT`);
+    // const methodStyled = chalk.bgGreen.white.bold(`PUT`);
     try {
-        console.log(chalk.hex('#FFA500')(`${methodStyled} Request URL: ${url}`));
-        console.log(chalk.hex('#e1ff00')(`${methodStyled} Request Body: ${JSON.stringify(bodyObj)}`));
+        console.log(chalk.hex('#FFA500')(`PUT Request URL: ${url}`));
+        console.log(chalk.hex('#e1ff00')(`PUT Request Body: ${JSON.stringify(bodyObj)}`));
 
         const res = await fetch(url, {
             method: 'PUT',
@@ -75,9 +75,9 @@ export const put_ = async (url: string, bodyObj: unknown) => {
 };
 
 export const delete_ = async (url: string) => {
-    const methodStyled = chalk.bgRed.white.bold('DELETE');
+    // const methodStyled = chalk.bgRed.white.bold('DELETE');
     try {
-        console.log(chalk.red(`${methodStyled} Request URL: ${url}`));
+        console.log(chalk.red(`DELETE Request URL: ${url}`));
 
         const res = await fetch(url, {
             method: 'DELETE',
@@ -95,23 +95,21 @@ export const delete_ = async (url: string) => {
 };
 
 const handleResponse = (response: ApiResponse, url: string, method: string): void | null => {
-    const methodStyled = chalk.bgBlue.white.bold(` ${method} `); // Method with background color
-
     if (response.Status === 'failure') {
         if (response.HttpCode === 404) {
-            console.log(`${methodStyled} ${chalk.red(url)} - ${chalk.bgRed.white.bold(' 404 ')}: ${chalk.red(response.Message)}`);
+            console.log(chalk.red(`${method} ${url} -  ${chalk.bgRed.white.bold(' 404 ')}: ${response.Message}`));
             return null;
         }
-        console.log(`${methodStyled} ${chalk.yellow(url)} - ${chalk.bgYellow.black.bold(` ${response.HttpCode} `)}: ${chalk.yellow(response.Message)}`);
+        console.log(chalk.yellow(`${method} ${url} - ${chalk.bgYellow.black.bold(` ${response.HttpCode} `)}: ${response.Message}`));
         throw error(response.HttpCode, response.Message);
     }
 
-    console.log(`${methodStyled} ${chalk.hex('#009933')(url)} - ${chalk.bgGreen.black.bold(' Success ')}: ${chalk.hex('#009933')(response.Message)}`);
+    console.log(chalk.hex('#009933')(`${method} ${(url)} - ${chalk.bgGreen.black.bold(' Success ')}: ${response.Message}`));
 };
 
 const handleError = (err: unknown, url: string, method: string): void => {
-    const methodStyled = chalk.bgBlue.white.bold(` ${method} `); // Consistent method styling
+    // const methodStyled = chalk.bgBlue.white.bold(` ${method} `); // Consistent method styling
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
 
-    console.error(`${methodStyled} ${chalk.red(url)} - ${chalk.bgRed.white.bold(' Error ')}: ${chalk.red(errorMessage)}`);
+    console.error(chalk.red(`${method} ${url} - ${chalk.bgRed.white.bold(' Error ')}: ${errorMessage}`));
 };

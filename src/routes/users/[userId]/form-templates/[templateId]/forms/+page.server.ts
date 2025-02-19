@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event: ServerLoadEvent) => {
 	// const { userId } = event.params;
 	event.depends('app:allNodes')
 	try {
-		const assessmentTemplateId = event.params.assessmentId;
+		const assessmentTemplateId = event.params.templateId;
 		const response = await getFormTemplateDetails(assessmentTemplateId);
 		// console.log(response);
 		if (response.Status === 'failure' || response.HttpCode !== 200) {
