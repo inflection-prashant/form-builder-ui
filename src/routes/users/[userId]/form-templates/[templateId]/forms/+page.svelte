@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageServerData } from './$types';
 	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
@@ -11,15 +11,16 @@
 	// import * as Tooltip from '$lib/components/ui/tooltip';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import Icon from '@iconify/svelte';
-	import { SectionForm, DragAndDropFunctionality, Sidebar } from '$lib/index';
+	import { DragAndDropFunctionality, SectionForm, Sidebar } from '$lib/index';
 	import { Template } from '$lib/index';
 	import { dropzone } from '$lib/components/common/dnd';
 	import { measurements, cards } from '$lib/components/common/questionTypes';
-	import { formComponents } from '$lib/components/common/questionTypes';
+	import { formComponents } from './response.types/index';
 	import {
 		deleteSectionById,
 		findSectionById,
 		findSectionByTitle,
+		mapSectionsAndQuestions,
 		updateSectionWithSubsection,
 		type Section
 	} from './localFunctions';
@@ -38,7 +39,7 @@
 	let sections = $state(data.data.assessmentTemplate.Sections);
 	let questions = $state(data.data.assessmentTemplate.Questions);
 	let templateInfo = $state(data.data.assessmentTemplate.Template); //data.assessmentTemplate.Template;
-	const parentFormTemplateId = $page.params.templateId;
+	const parentFormTemplateId = $derived(page.params.templateId);
 	let result = findSectionByTitle(data.data.assessmentTemplate.Sections, 'Assessment Root Section');
 	const rootSectionId: string = result.id;
 	let showSheet = $state(false); // false;
@@ -59,7 +60,7 @@
 	let subSectionDataFromDatabase = $state();
 	let parentSection = $state();
 	let uiSections: Section[] = $state([]);
-	const userId = $page.params.userId;
+	const userId = $derived(page.params.userId);
 
 	uiSections = mapSectionsAndQuestions(
 		data.data.assessmentTemplate.Sections,
@@ -68,232 +69,7 @@
 		data.data.assessmentTemplate.Questions
 	);
 
-	function mapSectionsAndQuestions(
-		sections: any[],
-		uiSections: Section[],
-		rootSectionId: string,
-		questions: any[]
-	) {
-		if (!sections || !Array.isArray(sections)) {
-			console.error('mapSections: sections is undefined or not an array', sections);
-			return;
-		}
-
-		let cardLocalIdCounter = 1;
-
-		// 1) Exclude the root section
-		const nonRootSections = sections.filter((section) => section.ParentSectionId !== rootSectionId);
-
-		// 2) Separate out parent sections (sections with ParentSectionId as rootSectionId)
-		const parentSections = sections.filter((section) => section.ParentSectionId === rootSectionId);
-
-		// 3) Separate the remaining sections as subsections
-		const subsections = nonRootSections.filter(
-			(section) => section.ParentSectionId !== rootSectionId
-		);
-
-		// 4) Sort parent sections by Sequence
-		parentSections.sort((a, b) => a.Sequence.localeCompare(b.Sequence));
-
-		// 5) Map subsections to their corresponding parent sections
-		const mappedParentSections = parentSections.map((parentSection, index) => {
-			// Assign subsections to the parent section and sort them by Sequence
-			const childSubsections = subsections
-				.filter((subsection) => subsection.ParentSectionId === parentSection.id)
-				.sort((a, b) => a.Sequence.localeCompare(b.Sequence));
-
-			let sectionNameCounter = 1;
-			let sectionIdCounter = 1;
-
-			// Map each child subsection to the parent section
-			const mappedSubsections = childSubsections.map((subsection) => {
-				// Assign questions to subsections and sort them by Sequence
-				const subsectionQuestions = questions
-					.filter((question) => question.ParentFormSection.id === subsection.id)
-					.sort((a, b) => a.Sequence.localeCompare(b.Sequence));
-
-				// Create card objects for questions with localIds
-				const mappedCards = subsectionQuestions.map((question) => ({
-					id: question.id,
-					name: question.ResponseType,
-					type: question.ResponseType,
-					Title: question.Title,
-					Description: question.Description,
-					Options: question.Options,
-					value: null,
-					icon: null,
-					localId: cardLocalIdCounter++
-				}));
-
-				return {
-					...subsection,
-					cards: mappedCards,
-					subsections: [],
-					subsectionCount: 0,
-					name: `SubSection ${sectionNameCounter++}`,
-					localId: sectionIdCounter++
-				};
-			});
-
-			// Assign questions to parent sections and sort them by Sequence
-			const parentSectionQuestions = questions
-				.filter((question) => question.ParentFormSection.id === parentSection.id)
-				.sort((a, b) => a.Sequence.localeCompare(b.Sequence));
-
-			// Create card objects for questions with localIds
-			const parentSectionCards = parentSectionQuestions.map((question) => ({
-				id: question.id,
-				name: question.ResponseType,
-				type: question.ResponseType,
-				Title: question.Title,
-				Description: question.Description,
-				Options: question.Options,
-				value: null,
-				icon: null,
-				localId: cardLocalIdCounter++
-			}));
-
-			return {
-				...parentSection,
-				localId: index + 1,
-				title: `Section ${index + 1}`,
-				databaseId: parentSection.id,
-				id: (index + 1).toString(),
-				name: `Section ${index + 1}`,
-				type: 'section',
-				cards: parentSectionCards,
-				subsections: mappedSubsections,
-				subsectionCount: mappedSubsections.length,
-				SectionIdentifier: parentSection.SectionIdentifier,
-				Title: parentSection.Title,
-				Description: parentSection.Description,
-				DisplayCode: parentSection.DisplayCode,
-				Sequence: parentSection.Sequence,
-				ParentSectionId: parentSection.ParentSectionId,
-				ParentFormTemplateId: parentSection.ParentFormTemplate.id,
-				CreatedAt: parentSection.CreatedAt,
-				UpdatedAt: parentSection.UpdatedAt
-			};
-		});
-
-		// Append the sorted and mapped sections to uiSections
-		uiSections.push(...mappedParentSections);
-		return uiSections;
-	}
-
-	// async function handleDragAndDrop(
-	// 	dropData,
-	// 	event: { preventDefault: () => void; stopPropagation: () => void },
-	// 	sectionId: number = null,
-	// 	subsectionId: number = null
-	// ) {
-	// 	event.preventDefault();
-	// 	event.stopPropagation();
-
-	// 	console.log(dropData, 'this is drop data');
-	// 	let dropSectionData;
-
-	// 	if (dropData.type === 'section') {
-	// 		if (sectionId === null) {
-	// 			// Handling main section addition
-	// 			dropSectionData = await getSectionData(parentFormTemplateId, rootSectionId);
-	// 			console.log(dropSectionData, 'this is drop section data');
-	// 			const newSection = {
-	// 				...dropData,
-	// 				databaseId: dropSectionData.id,
-	// 				localId: nextSectionId++,
-	// 				name: `Section ${sectionNameCounter++}`,
-	// 				cards: [],
-	// 				subsections: [],
-	// 				subsectionCount: 0,
-	// 				Title: dropSectionData.Title,
-	// 				Description: dropSectionData.Description,
-	// 				Sequence: dropSectionData.Sequence,
-	// 				ParentSectionId: dropSectionData.ParentSectionId,
-	// 				ParentFormTemplateId: dropSectionData.ParentFormTemplate.id
-	// 			};
-	// 			console.log(newSection, 'this is new section');
-	// 			uiSections = [...uiSections, newSection]; // Explicit reassignment
-	// 			console.log(uiSections, 'this is uiSections');
-	// 			toast.success('Section added successfully! Please add section details.');
-	// 		} else {
-	// 			// Handling subsection addition
-	// 			const parentSection = findSectionById(uiSections, sectionId);
-	// 			if (parentSection) {
-	// 				const newSubsectionId = await getSectionData(
-	// 					parentFormTemplateId,
-	// 					parentSection.databaseId
-	// 				);
-	// 				const newSubsection = {
-	// 					...dropData,
-	// 					id: newSubsectionId.id,
-	// 					localId: nextSectionId++,
-	// 					name: `Subsection ${parentSection.subsectionCount + 1}`,
-	// 					cards: [],
-	// 					subsections: [],
-	// 					subsectionCount: 0
-	// 				};
-	// 				updateSectionWithSubsection(uiSections, sectionId, newSubsection);
-	// 				parentSection.subsectionCount++;
-	// 				uiSections = [...uiSections]; // Trigger reactivity
-	// 				toast.success('Subsection added successfully! Please add subsection details.');
-	// 			}
-	// 		}
-	// 	} else if (dropData.type === 'card') {
-	// 		if (subsectionId !== null) {
-	// 			const parentSection = findSectionById(uiSections, sectionId);
-	// 			// const subsection = findSectionById(
-	// 			// 	parentSection.subsections,
-	// 			// 	subsectionId,
-	// 			// 	parentSection.localId
-	// 			// );
-	// 			let subsection;
-	// 			for (let sub of parentSection.subsections) {
-	// 				if (sub.localId === subsectionId) {
-	// 					console.log('local id', sub.localId);
-	// 					console.log('section id', subsectionId);
-	// 					subsection = sub;
-	// 				}
-	// 				console.log(subsection, 'subsection ');
-	// 			}
-
-	// 			if (subsection && !subsection.cards.some((card) => card.localId === dropData.localId)) {
-	// 				const questionId = await getQuestionData(
-	// 					parentFormTemplateId,
-	// 					subsection.id,
-	// 					dropData.value
-	// 				);
-	// 				subsection.cards = [
-	// 					...subsection.cards,
-	// 					{ ...dropData, localId: nextCardId++, id: questionId.id, Title: questionId.Title }
-	// 				];
-	// 				uiSections = [...uiSections]; // Reassign to trigger UI update
-	// 				toast.success('Card added successfully! Please add card details.');
-	// 			}
-	// 		} else if (sectionId !== null) {
-	// 			console.log(sectionId, 'this is section id');
-	// 			console.log(uiSections, 'this is section id');
-	// 			const section = findSectionById(uiSections, sectionId);
-	// 			if (section && !section.cards.some((card) => card.localId === dropData.localId)) {
-	// 				const questionId = await getQuestionData(
-	// 					parentFormTemplateId,
-	// 					section.databaseId,
-	// 					dropData.value
-	// 				);
-	// 				section.cards = [
-	// 					...section.cards,
-	// 					{ ...dropData, localId: nextCardId++, id: questionId.id, Title: questionId.Title }
-	// 				];
-	// 				uiSections = [...uiSections]; // Reassign to ensure reactivity
-	// 				toast.success('Card added successfully! Please add card details.');
-	// 			}
-	// 		}
-	// 	}
-
-	// 	invalidateAll();
-	// 	highlightedSection = null;
-	// 	highlightedSubSection = null;
-	// }
+	console.log(uiSections);
 
 	async function handleDragAndDrop(
 		dropData,
@@ -332,6 +108,7 @@
 		if (dropData.type === 'section') {
 			if (sectionId === null) {
 				dropSectionData = await getSectionData(parentFormTemplateId, rootSectionId);
+
 				const newSection = {
 					...dropData,
 					databaseId: dropSectionData.id,
@@ -693,9 +470,9 @@
 		{data}
 		{responseType}
 		id={questionId}
-		on:closeSheet={closeSheet}
-		on:handleSubmitForm={handleSubmit}
 		{questionCard}
+		{closeSheet}
+		handleSubmitForm={handleSubmit}
 	/>
 {/if}
 
@@ -897,10 +674,15 @@
 														{#if selected}
 															{@const SelectedComponent = formComponents[selected]}
 															<SelectedComponent
-																on:openSheet={openSheet}
-																on:closeSheet={closeSheet}
-																on:handleSubmitForm={handleSubmit}
+																open={(temp: {
+																	detail: { responseType: any; id: any; card: any };
+																}) => openSheet(temp)}
+																close={(temp: any) => closeSheet(temp)}
+																submit={(temp: { preventDefault: () => void }) =>
+																	handleSubmit(temp)}
 																responseType={selected}
+																id={card.id}
+																{card}
 															/>
 														{/if}
 													{/if}

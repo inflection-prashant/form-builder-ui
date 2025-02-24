@@ -5,8 +5,8 @@
 	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { Button } from '$lib/components/ui/button';
-	import { createEventDispatcher } from 'svelte';
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	// import { createEventDispatcher } from 'svelte';
+	// import * as Accordion from '$lib/components/ui/accordion/index.js';
 
 	import Option from './Option.svelte';
 	import RangeRating from './RangeRating.svelte';
@@ -17,8 +17,8 @@
 	import InfoIcon from '../common/InfoIcon.svelte';
 	//////////////////////////////////////////////////////////////////////////////
 
-	export let data: SuperValidated<Infer<QuestionSchema>>;
-	const form = superForm(data, {
+	let { data }: { data: { form: SuperValidated<Infer<QuestionSchema>> } } = $props();
+	const form = superForm(data.form, {
 		validators: zodClient(questionSchema),
 		applyAction: true,
 		dataType: 'json'
@@ -26,11 +26,12 @@
 
 	const { form: formData } = form;
 
-	export let responseType: string;
-	export let id: string;
-	export let questionCard;
+	let {responseType,id,questionCard} = $props();
+	// export let responseType: string;
+	// export let id: string;
+	// export let questionCard;
 
-	$: $formData.description = questionCard.Description;
+	let $formData.description = questionCard.Description;
 	$: $formData.title = questionCard.Title;
 	$: $formData.score = questionCard.Score;
 	$: $formData.correctAnswer = questionCard.CorrectAnswer;
@@ -39,7 +40,7 @@
 	$: $formData.rangeMin = questionCard.RangeMin;
 	$: $formData.rangeMax = questionCard.RangeMax;
 
-	const dispatch = createEventDispatcher();
+	// const dispatch = createEventDispatcher();
 
 	let options = questionCard.Options ? [...questionCard.Options] : [];
 
