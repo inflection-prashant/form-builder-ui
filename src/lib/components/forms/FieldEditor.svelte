@@ -17,7 +17,18 @@
 	import InfoIcon from '../common/InfoIcon.svelte';
 	//////////////////////////////////////////////////////////////////////////////
 
-	let { data }: { data: { form: SuperValidated<Infer<QuestionSchema>> } } = $props();
+	// interface Props {
+	// 	data: { form: SuperValidated<Infer<QuestionSchema>> };
+	// 	responseType: string;
+	// 	id: string;
+	// 	questionCard: any; // Replace `any` with the correct type
+	// 	handleSubmit();
+	// }
+
+	// Destructure props
+	let { data, responseType, id, questionCard, handleSubmit } = $props();
+
+	// Initialize superForm
 	const form = superForm(data.form, {
 		validators: zodClient(questionSchema),
 		applyAction: true,
@@ -26,31 +37,38 @@
 
 	const { form: formData } = form;
 
-	let {responseType,id,questionCard} = $props();
-	// export let responseType: string;
-	// export let id: string;
-	// export let questionCard;
+	$effect(() => {
+		const form = formData as {
+			id?: string;
+			parentSectionId?: string;
+			title?: string;
+			description?: string;
+			responseType?: string;
+			options?: string[];
+			score?: number;
+			correctAnswer?: string;
+			hint?: string;
+			questionImageUrl?: string;
+			rangeMin?: number;
+			rangeMax?: number;
+		};
 
-	let $formData.description = questionCard.Description;
-	$: $formData.title = questionCard.Title;
-	$: $formData.score = questionCard.Score;
-	$: $formData.correctAnswer = questionCard.CorrectAnswer;
-	$: $formData.hint = questionCard.Hint;
-	$: $formData.questionImageUrl = questionCard.QuestionImageUrl;
-	$: $formData.rangeMin = questionCard.RangeMin;
-	$: $formData.rangeMax = questionCard.RangeMax;
-
-	// const dispatch = createEventDispatcher();
+		form.description = questionCard.Description;
+		form.title = questionCard.Title;
+		form.score = questionCard.Score;
+		form.correctAnswer = questionCard.CorrectAnswer;
+		form.hint = questionCard.Hint;
+		form.questionImageUrl = questionCard.QuestionImageUrl;
+		form.rangeMin = questionCard.RangeMin;
+		form.rangeMax = questionCard.RangeMax;
+	});
 
 	let options = questionCard.Options ? [...questionCard.Options] : [];
 
 	const hardcodedImageUrl = 'https://example.com/default';
 
 	function addOption() {
-		if (responseType === 'Boolean' && options.length >= 2) {
-			return; // Prevent adding more than 2 options for Boolean type
-		}
-
+		if (responseType === 'Boolean' && options.length >= 2) return;
 		options = [
 			...options,
 			{ Sequence: (options.length + 1).toString(), Data: '', ImageUrl: hardcodedImageUrl }
@@ -66,11 +84,10 @@
 		options = options.filter((_, i) => i !== index);
 	}
 
-	function handleSubmit(event: Event) {
+	function submit(event: Event) {
 		event.preventDefault();
-		$formData.options = options;
-
-		dispatch('handleSubmit', { formData: $formData });
+		formData.options = options;
+		// dispatch('handleSubmit', { formData });
 		toast.info('Question updated successfully!');
 	}
 
@@ -88,7 +105,14 @@
 		action="?/createQuestion"
 		method="post"
 		use:enhance
-		on:submit|preventDefault={handleSubmit}
+		onsubmit={(event: Event) => {
+			event.preventDefault();
+			formData.options = options;
+			// handleSubmit({ formData });
+			submit(event);
+			handleSubmit({ formData });
+			toast.info('Question updated successfully!');
+		}}
 		class="custom-scrollbar h-[calc(screen-2rem)] min-h-screen w-full overflow-y-hidden px-5 py-4"
 	>
 		<Form.Field {form} name="id" class="hidden">

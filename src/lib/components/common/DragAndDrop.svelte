@@ -41,7 +41,7 @@
 			data={data?.questionForm}
 			{responseType}
 			{questionCard}
-			on:handleSubmit={(event) => handleSubmitForm(event)}
+			handleSubmit={handleSubmitForm}
 		/>
 	</div>
 </div>
