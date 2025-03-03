@@ -240,7 +240,7 @@
 					</Collapsible.Trigger>
 				</div>
 
-				<div class="flex h-fit w-full flex-row">
+				<div class="flex h-full w-full flex-row">
 					<Button
 						variant="outline"
 						class="h-full w-full p-2"
@@ -255,8 +255,8 @@
 					</Button>
 
 					<AlertDialog.Root>
-						<AlertDialog.Trigger class={buttonVariants({ variant: 'outline' })}>
-							<Button variant="ghost" class="ml-1 h-full py-5"
+						<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} bg-red400">
+							<Button variant="ghost" class="py-6 ml-1 h-full w-full bg-green-400"
 								><Icon icon="weui:delete-outlined" width="20" height="20" style="color:red" />
 							</Button>
 						</AlertDialog.Trigger>
@@ -294,7 +294,7 @@
 							ondragstart={(event) => handleCardDragStart(section.localId, card.localId, event)}
 							ondrop={(event) => handleCardDrop(section.localId, index, event)}
 							ondragover={(event) => {
-								event.preventDefault(); // ✅ Prevent default behavior here
+								event.preventDefault(); 
 							}}
 							role="listitem"
 							aria-label={`Card: ${card.name}`}
@@ -316,7 +316,7 @@
 										{/each}
 									</select> -->
 
-									{#if selected}
+									{#if 1}
 										{@const SelectedComponent = formComponents[selected]}
 										<SelectedComponent
 											open={(temp: { detail: { responseType: any; id: any; card: any } }) =>
@@ -587,3 +587,29 @@
 		</Collapsible.Root>
 	</div>
 {/each}
+
+<style>
+	.delete-button {
+		@apply absolute -right-7 top-[40%] hidden border p-1 text-white;
+	}
+
+	.hover-container:hover .delete-button {
+		@apply block;
+	}
+
+	.highlight {
+		border: 2px solid blue; /* You can change the border style and color */
+	}
+
+	:global(.dialog-content.dialog-content) {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		overflow-y: scroll;
+	}
+
+	:global(.dialog-content.dialog-content::-webkit-scrollbar) {
+		width: 0;
+		height: 0;
+		display: none;
+	}
+</style>

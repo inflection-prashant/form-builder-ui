@@ -551,7 +551,7 @@
 
 				<div
 					ondragover={(event) => {
-						event.preventDefault(); // ✅ Prevent default behavior here
+						event.preventDefault();
 					}}
 					class="flex h-full w-full flex-col"
 					use:dropzone={{ on_dropzone: handleDragAndDrop }}
