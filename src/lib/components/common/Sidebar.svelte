@@ -6,14 +6,22 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 
-	let newSectionTemplate = {
-		databaseId: '',
+	let SectionTemplate = {
+		id:number,
 		localId: number,
 		name: '',
-		type: 'section',
+		type: 'Section',
 		cards: [],
 		subsections: [],
 		subsectionCount: 0
+	};
+
+	let SubSectionTemplate = {
+		databaseId: '',
+		localId: number,
+		name: '',
+		type: 'Subsection',
+		cards: []
 	};
 
 	export let cards;
@@ -24,12 +32,12 @@
 
 <div class="relative w-full overflow-hidden md:ml-5 md:w-3/12">
 	<div class="fixed space-y-4 px-4 py-1">
-		<!-- Section selection -->
 		<Card.Root class="rounded-lg border p-4">
-			<Card.Title class="text-md mb-3">Drag Section From Here</Card.Title>
+			<Card.Title class="text-md mb-3">Drag Section and SubSection From Here</Card.Title>
+			<!-- Section selection -->
 			<div
 				class="flex cursor-grab items-center justify-center"
-				use:draggable={{ ...newSectionTemplate, type: 'section' }}
+				use:draggable={{ ...SectionTemplate, type: 'section' }}
 				role="button"
 				aria-label="Draggable new section template"
 			>
@@ -40,7 +48,24 @@
 						height="16"
 						class=" mr-2 text-primary"
 					/>
-					Add section
+					Add Section
+				</Button>
+			</div>
+			<!-- Sub Section selection -->
+			<div
+				class="flex cursor-grab items-center justify-center mt-2"
+				use:draggable={{ ...SubSectionTemplate, type: 'SubSection' }}
+				role="button"
+				aria-label="Draggable new section template"
+			>
+				<Button class="w-full space-x-2" variant="secondary">
+					<Icon
+						icon="teenyicons:section-add-outline"
+						width="16"
+						height="16"
+						class=" mr-2 text-primary"
+					/>
+					Add SubSection
 				</Button>
 			</div>
 		</Card.Root>

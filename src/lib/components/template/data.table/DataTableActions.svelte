@@ -24,6 +24,7 @@
 	}
 
 	function reviewAssessment(templateId: string) {
+		console.log('this is template id', templateId);
 		goto(`/users/${userId}/form-templates/${templateId}/preview`);
 	}
 
