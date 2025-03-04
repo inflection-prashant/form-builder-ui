@@ -1,3 +1,5 @@
+import { createNewSection, deleteSection } from "./apiFunctions";
+
 export type Card = {
     localId: number;
     id: string;
@@ -12,6 +14,25 @@ export type Card = {
 };
 
 export type Section = {
+    id: string;
+    id_: number;
+    Name_: string;
+    Type_: string;
+    Cards_: Card[];
+    SubSections_: Section[];
+    SubSectionCount_: number;
+    ParentFormTemplateId: string;
+    ParentSectionId: string;
+    Title: string | null;
+    SectionIdentifier: string | null;
+    Description: string | null;
+    DisplayCode: string;
+    Sequence: string | null;
+    CreatedAt: string;
+    UpdatedAt: string | null;
+};
+
+export type SubSection = {
     id: string;
     SectionIdentifier: string | null;
     Title: string | null;
@@ -115,6 +136,24 @@ export function deleteSectionById(sections: Section[], sectionId: number, isSubs
 export const findSectionByTitle = (sections: Section[], title: string): Section | undefined => {
     return sections.find(section => section.Title === title);
 };
+
+export async function getSectionData(parentFormTemplateId: string, parentSectionId: string) {
+    const sectionData = await createNewSection({ parentFormTemplateId, parentSectionId });
+    console.log(sectionData, 'sectionData');
+    return sectionData;
+}
+
+
+export const handleDeleteSectionById = async (localId: string) => {
+    try {
+        const res = await deleteSection({ sectionId: localId });
+        console.log('Delete successful:', res);
+    } catch (error) {
+        console.error('Error in handleDeleteSectionById:', error);
+    }
+};
+
+
 
 // export function mapSectionsAndQuestions(
 //     sections: any[],
