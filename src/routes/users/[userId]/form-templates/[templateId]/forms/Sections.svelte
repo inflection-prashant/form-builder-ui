@@ -11,14 +11,16 @@
 	import { deleteSectionById, findSectionById } from './localFunctions';
 	import { toast } from 'svelte-sonner';
 	import { deleteSection, fetchSectionData } from './apiFunctions';
+	import { DragAndDropFunctionality } from '$lib';
 
 	////////////////////////////////////////////////////////////////////////////
 
 	let {
 		uiSections = $bindable(),
+		data,
 		highlightedSection,
 		highlightedSubSection,
-		showSheet,
+		showSheet = $bindable(),
 		responseType,
 		questionId,
 		questionCard,
@@ -39,6 +41,8 @@
 		closeSubSectionForm
 	} = $props();
 
+	console.log('this is uisection array');
+	$inspect(uiSections);
 	// Initialize selected component (default to first component in the list)
 	const componentKeys = Object.keys(formComponents);
 	let selected = $state(componentKeys[0]);
@@ -50,7 +54,6 @@
 		questionId = e.detail.id;
 		questionCard = e.detail.card;
 	}
-	
 
 	function handleDragEnter(sectionId: number) {
 		highlightedSection = sectionId;
@@ -122,7 +125,7 @@
 		handleDeleteSubcard(sectionLocalId, subsectionLocalId, cardLocalId, cardId);
 		closeDeleteModal();
 	}
-	
+
 	function handleDeleteSubcard(
 		sectionId: number,
 		subsectionId: number,
@@ -157,7 +160,7 @@
 			console.error('Error in handleDeleteSectionById:', error);
 		}
 	};
-	
+
 	function handleDeleteSection(sectionId: number, databaseId: string) {
 		uiSections = deleteSectionById(uiSections, sectionId);
 		handleDeleteSectionById(databaseId);
@@ -170,12 +173,10 @@
 		toast.success('Subsection deleted successfully');
 	}
 
-		async function openSectionForm(id: string) {
+	async function openSectionForm(id: string) {
 		sectionDataFromDatabase = await fetchSectionData(id);
 		sectionForm = true;
 	}
-
-
 
 	async function openSubSectionForm(id: string, parentsectionId: string) {
 		subSectionDataFromDatabase = await fetchSectionData(id);
@@ -183,8 +184,6 @@
 		subSectionForm = true;
 	}
 
-
-	
 	function handleCardDragStart(sectionId: number, cardId: number, event: DragEvent) {
 		event.dataTransfer.setData('text/plain', JSON.stringify({ sectionId, cardId }));
 	}
@@ -215,6 +214,16 @@
 	}
 </script>
 
+{#if showSheet}
+	<DragAndDropFunctionality
+		{data}
+		{responseType}
+		id={questionId}
+		{questionCard}
+		{closeSheet}
+		handleSubmitForm={handleSubmit}
+	/>
+{/if}
 {#each uiSections as section (section.localId)}
 	<div
 		class="my-4 border p-3 {highlightedSection === section.localId ? 'highlight' : ''}"
@@ -256,7 +265,7 @@
 
 					<AlertDialog.Root>
 						<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} bg-red400">
-							<Button variant="ghost" class="py-6 ml-1 h-full w-full bg-green-400"
+							<Button variant="ghost" class="ml-1 h-full w-full bg-green-400 py-6"
 								><Icon icon="weui:delete-outlined" width="20" height="20" style="color:red" />
 							</Button>
 						</AlertDialog.Trigger>
@@ -294,29 +303,30 @@
 							ondragstart={(event) => handleCardDragStart(section.localId, card.localId, event)}
 							ondrop={(event) => handleCardDrop(section.localId, index, event)}
 							ondragover={(event) => {
-								event.preventDefault(); 
+								event.preventDefault();
 							}}
 							role="listitem"
 							aria-label={`Card: ${card.name}`}
 						>
 							<div class="relative mt-1 flex w-[95%]">
 								{#if card.name !== 'None'}
-									<!-- <svelte:component
-															this={formComponents[card.name]}
-															on:openSheet={openSheet}
-															on:closeSheet={closeSheet}
-															on:handleSubmitForm={handleSubmit}
-															responseType={card.name}
-															id={card.id}
-															{card}
-														/> -->
+									<svelte:component
+										this={formComponents[card.name]}
+										open={(temp: { detail: { responseType: any; id: any; card: any } }) =>
+											openSheet(temp)}
+										close={(temp: any) => closeSheet(temp)}
+										submit={(temp: { preventDefault: () => void }) => handleSubmit(temp)}
+										responseType={selected}
+										id={card.id}
+										{card}
+									/>
 									<!-- <select bind:value={selected}>
 										{#each componentKeys as key}
 											<option value={key}>{key}</option>
 										{/each}
 									</select> -->
 
-									{#if 1}
+									<!-- 							
 										{@const SelectedComponent = formComponents[selected]}
 										<SelectedComponent
 											open={(temp: { detail: { responseType: any; id: any; card: any } }) =>
@@ -326,8 +336,7 @@
 											responseType={selected}
 											id={card.id}
 											{card}
-										/>
-									{/if}
+										/> -->
 								{/if}
 								<button
 									class="delete-button"

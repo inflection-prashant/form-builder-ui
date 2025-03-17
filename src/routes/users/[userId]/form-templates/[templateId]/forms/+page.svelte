@@ -69,7 +69,7 @@
 		data.data.assessmentTemplate.Questions
 	);
 
-	// console.log(uiSections);
+	console.log(uiSections);
 
 	async function handleDragAndDrop(
 		dropData,
@@ -465,7 +465,7 @@
 	// let selected = $state(componentKeys[0]);
 </script>
 
-{#if showSheet}
+<!-- {#if showSheet}
 	<DragAndDropFunctionality
 		{data}
 		{responseType}
@@ -474,7 +474,7 @@
 		{closeSheet}
 		handleSubmitForm={handleSubmit}
 	/>
-{/if}
+{/if} -->
 
 {#if sectionForm}
 	<div
@@ -560,6 +560,7 @@
 				>
 					<Sections
 						bind:uiSections
+						{data}
 						{handleDeleteCard}
 						{highlightedSection}
 						{highlightedSubSection}
